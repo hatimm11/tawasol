@@ -1082,10 +1082,27 @@ body.dark ::-webkit-scrollbar-track{background:#0a0f1e;}
   <!-- Student Health Records -->
   <div class="card">
     <div class="ch">🏥 إضافة حالة طالب</div>
+    <div class="g2 mb">
+      <div>
+        <label>المرحلة</label>
+        <select id="cns-stage" onchange="cnsUpdateClasses()" style="margin-bottom:0">
+          <option value="">— اختر —</option>
+          <option>الأول الثانوي</option>
+          <option>ثاني ثانوي</option>
+          <option>ثالث ثانوي</option>
+        </select>
+      </div>
+      <div>
+        <label>الفصل</label>
+        <select id="cns-cls" onchange="cnsUpdateStudents()" style="margin-bottom:0">
+          <option value="">— اختر المرحلة —</option>
+        </select>
+      </div>
+    </div>
     <div class="mb">
       <label>الطالب</label>
       <select id="cns-student" style="margin-bottom:0">
-        <option value="">— اختر الطالب —</option>
+        <option value="">— اختر الفصل أولاً —</option>
       </select>
     </div>
     <div class="mb">
@@ -1156,12 +1173,29 @@ body.dark ::-webkit-scrollbar-track{background:#0a0f1e;}
     <input type="hidden" id="abs-type-val" value="غياب">
   </div>
 
-  <div class="card">
+    <div class="card">
     <div class="ch">الطالب</div>
+    <div class="g2 mb">
+      <div>
+        <label>المرحلة</label>
+        <select id="abs-stage" onchange="absUpdateClasses()" style="margin-bottom:0">
+          <option value="">— اختر —</option>
+          <option>الأول الثانوي</option>
+          <option>ثاني ثانوي</option>
+          <option>ثالث ثانوي</option>
+        </select>
+      </div>
+      <div>
+        <label>الفصل</label>
+        <select id="abs-cls" onchange="absUpdateStudents()" style="margin-bottom:0">
+          <option value="">— اختر المرحلة —</option>
+        </select>
+      </div>
+    </div>
     <div class="mb">
-      <label>اختر الطالب</label>
-      <select id="abs-student" onchange="onStudentChange()">
-        <option value="">— اختر الطالب —</option>
+      <label>الطالب</label>
+      <select id="abs-student" onchange="onStudentChange()" style="margin-bottom:0">
+        <option value="">— اختر الفصل أولاً —</option>
       </select>
     </div>
     <div id="abs-student-info" style="display:none;background:#f0f9f4;border-radius:9px;padding:10px;font-size:13px;color:#0d3b2e;margin-bottom:10px"></div>
@@ -2850,10 +2884,23 @@ function saveCnsRecords(arr){
 }
 
 function loadCnsStudents(){
+  // Populate stage dropdown from data
+  var stageSel=document.getElementById('cns-stage');
+  if(stageSel){
+    var seen={};
+    getParents().forEach(function(p){if(p.stage)seen[p.stage]=true;});
+    var opts='<option value="">— اختر —</option>';
+    ['الأول الثانوي','السنة المشتركة','ثاني ثانوي','ثالث ثانوي'].forEach(function(st){
+      if(seen[st])opts+='<option>'+st+'</option>';
+    });
+    stageSel.innerHTML=opts;
+  }
   var sel=document.getElementById('cns-student');
   if(!sel)return;
+  sel.innerHTML='<option value="">— اختر الفصل أولاً —</option>';
   var parents=getParents();
-  sel.innerHTML='<option value="">— اختر الطالب —</option>'+
+  // Keep old logic as fallback for direct select
+  sel.innerHTML='<option value="">— اختر الفصل أولاً —</option>'+
     parents.filter(function(p){return p.student;}).map(function(p){
       return '<option value="'+p.id+'">'+(p.student||p.name)+(p.cls?' — '+p.cls:'')+'</option>';
     }).join('');
@@ -3385,6 +3432,86 @@ function getMsgStats(){
   }catch(e){return {today:0,week:0,total:0};}
 }
 
+
+
+function absUpdateClasses(){
+  var stage = document.getElementById('abs-stage') ? document.getElementById('abs-stage').value : '';
+  var clsSel = document.getElementById('abs-cls');
+  var stuSel = document.getElementById('abs-student');
+  if(!clsSel) return;
+  var classes = {};
+  getParents().filter(function(p){
+    return !stage || p.stage===stage || (stage==='الأول الثانوي' && p.stage==='السنة المشتركة');
+  }).forEach(function(p){ if(p.cls) classes[p.cls]=true; });
+  var sorted = Object.keys(classes).sort(function(a,b){return a.localeCompare(b,'ar');});
+  var opts = '<option value="">— اختر الفصل —</option>';
+  sorted.forEach(function(cl){ opts += '<option>'+cl+'</option>'; });
+  clsSel.innerHTML = opts;
+  if(stuSel) stuSel.innerHTML = '<option value="">— اختر الفصل أولاً —</option>';
+}
+
+function absUpdateStudents(){
+  var stage = document.getElementById('abs-stage') ? document.getElementById('abs-stage').value : '';
+  var cls   = document.getElementById('abs-cls')   ? document.getElementById('abs-cls').value   : '';
+  var stuSel = document.getElementById('abs-student');
+  if(!stuSel) return;
+  var students = getParents().filter(function(p){
+    var stageMatch = !stage || p.stage===stage || (stage==='الأول الثانوي' && p.stage==='السنة المشتركة');
+    var clsMatch   = !cls   || p.cls===cls;
+    return stageMatch && clsMatch && p.student;
+  });
+  var opts = '<option value="">— اختر الطالب —</option>';
+  students.forEach(function(p){
+    opts += '<option value="'+p.id+'">'+p.student+'</option>';
+  });
+  stuSel.innerHTML = opts;
+}
+
+function onStudentChange(){
+  var sel = document.getElementById('abs-student');
+  var pid = sel ? sel.value : '';
+  var infoEl = document.getElementById('abs-student-info');
+  if(!infoEl) return;
+  if(!pid){ infoEl.style.display='none'; return; }
+  var p = getParents().find(function(x){return x.id===pid;});
+  if(!p){ infoEl.style.display='none'; return; }
+  infoEl.style.display='block';
+  infoEl.innerHTML='<strong>'+p.student+'</strong>'+(p.stage?' — '+p.stage:'')+(p.cls?' — صف '+p.cls:'')+'<br>ولي الأمر: '+p.name+(p.phone?' • '+p.phone:'');
+}
+
+
+function cnsUpdateClasses(){
+  var stage = document.getElementById('cns-stage') ? document.getElementById('cns-stage').value : '';
+  var clsSel = document.getElementById('cns-cls');
+  var stuSel = document.getElementById('cns-student');
+  if(!clsSel) return;
+  var classes = {};
+  getParents().filter(function(p){
+    return !stage || p.stage===stage || (stage==='الأول الثانوي' && p.stage==='السنة المشتركة');
+  }).forEach(function(p){ if(p.cls) classes[p.cls]=true; });
+  var sorted = Object.keys(classes).sort(function(a,b){return a.localeCompare(b,'ar');});
+  var opts = '<option value="">— اختر الفصل —</option>';
+  sorted.forEach(function(cl){ opts += '<option>'+cl+'</option>'; });
+  clsSel.innerHTML = opts;
+  if(stuSel) stuSel.innerHTML = '<option value="">— اختر الفصل أولاً —</option>';
+}
+
+function cnsUpdateStudents(){
+  var stage = document.getElementById('cns-stage') ? document.getElementById('cns-stage').value : '';
+  var cls   = document.getElementById('cns-cls')   ? document.getElementById('cns-cls').value   : '';
+  var stuSel = document.getElementById('cns-student');
+  if(!stuSel) return;
+  var students = getParents().filter(function(p){
+    var sm = !stage || p.stage===stage || (stage==='الأول الثانوي' && p.stage==='السنة المشتركة');
+    var cm = !cls || p.cls===cls;
+    return sm && cm && p.student;
+  });
+  var opts = '<option value="">— اختر الطالب —</option>';
+  students.forEach(function(p){
+    opts += '<option value="'+p.id+'">'+p.student+'</option>';
+  });
+  stuSel.innerHTML = opts;
+}
 </script>
 </body>
 </html>
