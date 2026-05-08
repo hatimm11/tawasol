@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="منصة تواصل">
+<meta name="apple-mobile-web-app-title" content="تواصل ينبع">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d3b2e">
-<title>منصة تواصل — ثانوية ينبع</title>
+<title>تواصل ينبع</title>
 <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogItmF2YbYtdipINiq2YjYp9i12YQg4oCUINir2KfZhtmI2YrYqSDZitmG2KjYuSIsICJzaG9ydF9uYW1lIjogItmF2YbYtdipINiq2YjYp9i12YQiLCAiZGVzY3JpcHRpb24iOiAi2YXZhti12Kkg2KfZhNiq2YjYp9i12YQg2KfZhNmF2K/Ysdiz2YoiLCAic3RhcnRfdXJsIjogIi4iLCAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwgImJhY2tncm91bmRfY29sb3IiOiAiIzBkM2IyZSIsICJ0aGVtZV9jb2xvciI6ICIjMGQzYjJlIiwgImRpciI6ICJydGwiLCAibGFuZyI6ICJhciIsICJpY29ucyI6IFt7InNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBeE1EQWdNVEF3SWo0OGNtVmpkQ0IzYVdSMGFEMGlNVEF3SWlCb1pXbG5hSFE5SWpFd01DSWdjbmc5SWpJd0lpQm1hV3hzUFNJak1HUXpZakpsSWk4K1BIUmxlSFFnZVQwaUxqbGxiU0lnWm05dWRDMXphWHBsUFNJM05TSWdlRDBpTlRBbElpQjBaWGgwTFdGdVkyaHZjajBpYldsa1pHeGxJajd3bjVPeFBDOTBaWGgwUGp3dmMzWm5QZz09IiwgInNpemVzIjogIjE5MngxOTIiLCAidHlwZSI6ICJpbWFnZS9zdmcreG1sIn1dfQ==">
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjMGQzYjJlIi8+PHRleHQgeT0iLjllbSIgZm9udC1zaXplPSI3NSIgeD0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn5OxPC90ZXh0Pjwvc3ZnPg==">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
@@ -303,9 +303,127 @@ body.dark ::-webkit-scrollbar-track{background:#0a0f1e;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLTwA2M-AnQFhYNApEHFYKLbDcApQ5cFA",
+    authDomain: "tawasol-yanbu.firebaseapp.com",
+    databaseURL: "https://tawasol-yanbu-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "tawasol-yanbu",
+    storageBucket: "tawasol-yanbu.firebasestorage.app",
+    messagingSenderId: "860219246483",
+    appId: "1:860219246483:web:598710ee4a56e41e190a66"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  var db = firebase.database();
+  var FB_SCHOOL = 'yanbu_ths'; // unique school key
+
+  // ── FIREBASE SYNC FUNCTIONS ──
+
+  // Sync teachers to Firebase
+  function fbSaveTeachers(teachers){
+    try{db.ref(FB_SCHOOL+'/teachers').set(teachers);}catch(e){}
+  }
+
+  // Sync parents to Firebase
+  function fbSaveParents(parents){
+    try{db.ref(FB_SCHOOL+'/parents').set(parents);}catch(e){}
+  }
+
+  // Sync shared templates to Firebase
+  function fbSaveSharedTpls(tpls){
+    try{db.ref(FB_SCHOOL+'/shared_tpls').set(tpls);}catch(e){}
+  }
+
+  // Sync sched to Firebase
+  function fbSaveSched(sched){
+    try{db.ref(FB_SCHOOL+'/sched').set(sched);}catch(e){}
+  }
+
+  // Sync sched locs to Firebase
+  function fbSaveSchedLocs(locs){
+    try{db.ref(FB_SCHOOL+'/sched_locs').set(locs);}catch(e){}
+  }
+
+  // Listen for real-time updates
+  var _fbInitialized = false;
+  function fbListen(){
+    if(_fbInitialized) return;
+    _fbInitialized = true;
+
+    // Teachers
+    db.ref(FB_SCHOOL+'/teachers').on('value', function(snap){
+      var data = snap.val();
+      if(data && Array.isArray(data) && data.length > 0){
+        DB.teachers = data;
+        try{localStorage.setItem('sd_shared_teachers_v1', JSON.stringify(data));}catch(e){}
+        if(document.getElementById('tc-list')) renderTC();
+      }
+    });
+
+    // Parents
+    db.ref(FB_SCHOOL+'/parents').on('value', function(snap){
+      var data = snap.val();
+      if(data && Array.isArray(data) && data.length > 0){
+        _parentsCache = data;
+        try{localStorage.setItem('sd_parents_v1', JSON.stringify(data));}catch(e){}
+        if(document.getElementById('par-list')) renderParents();
+      }
+    });
+
+    // Shared templates
+    db.ref(FB_SCHOOL+'/shared_tpls').on('value', function(snap){
+      var data = snap.val();
+      if(data && Array.isArray(data)){
+        try{localStorage.setItem('sd_shared_tpls_v1', JSON.stringify(data));}catch(e){}
+        if(document.getElementById('t-list')) renderTpls();
+        if(document.getElementById('m-tlist')) renderMTpls();
+      }
+    });
+
+    // Sched
+    db.ref(FB_SCHOOL+'/sched').on('value', function(snap){
+      var data = snap.val();
+      if(data){
+        _schedCache = data;
+        try{localStorage.setItem('sd_weekly_sched_v1', JSON.stringify(data));}catch(e){}
+      }
+    });
+
+    // Sched locs
+    db.ref(FB_SCHOOL+'/sched_locs').on('value', function(snap){
+      var data = snap.val();
+      if(data && Array.isArray(data)){
+        _schedLocsCache = data;
+        try{localStorage.setItem('sd_sched_locs_v1', JSON.stringify(data));}catch(e){}
+        if(document.getElementById('sd-locs-list')) renderSchedLocs();
+        if(document.getElementById('sd-slots-list')) renderSchedSlots();
+      }
+    });
+  }
+
+  // Connection status
+  db.ref('.info/connected').on('value', function(snap){
+    var online = snap.val();
+    var dot = document.getElementById('fb-status');
+    if(dot) dot.style.background = online ? '#22c55e' : '#ef4444';
+    var txt = document.getElementById('fb-status-txt');
+    if(txt) txt.textContent = online ? 'متصل ☁️' : 'غير متصل';
+    var bar = document.getElementById('fb-bar');
+    if(bar) bar.style.display = online ? 'none' : 'block';
+  });
+
+</script>
+
 </head>
 <body>
 <div class="toast" id="toast"></div>
+<div id="fb-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#ef4444;color:#fff;text-align:center;font-size:11px;padding:3px;font-family:inherit">⚠️ غير متصل بقاعدة البيانات — البيانات تُحفظ محلياً فقط</div>
 
 <!-- ROLE SCREEN -->
 <div class="role-screen" id="role-screen">
@@ -339,7 +457,7 @@ body.dark ::-webkit-scrollbar-track{background:#0a0f1e;}
   </button>
   <div style="text-align:center;margin-top:32px;font-size:11px;color:rgba(255,255,255,.4);line-height:1.9">
     جميع الحقوق محفوظة لثانوية ينبع<br>
-    <span style="color:rgba(255,255,255,.25)">تم تطويره بواسطة: حاتم السفياني</span>
+    <span style="color:rgba(255,255,255,.25)">تم تطويره بواسطة: حاتم السفياني</span>&nbsp;&nbsp;<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:rgba(255,255,255,.4)"><span id="fb-status" style="width:7px;height:7px;border-radius:50%;background:#94a3b8;display:inline-block"></span><span id="fb-status-txt">قاعدة البيانات</span></span>
   </div>
 </div>
 
@@ -995,6 +1113,8 @@ function save(){
     localStorage.setItem(STORE, JSON.stringify(roleData));
     localStorage.setItem(SHARED_TEACHERS_KEY, JSON.stringify(DB.teachers));
   }catch(e){}
+  // Sync to Firebase
+  if(typeof fbSaveTeachers !== 'undefined') fbSaveTeachers(DB.teachers);
 }
 
 function switchTcTab(tab){
@@ -1238,9 +1358,28 @@ function selectRole(role){
   document.getElementById('role-screen').classList.add('hidden');
   // Reload role templates from store
   try{var _rd=localStorage.getItem(STORE);if(_rd){var _rp=JSON.parse(_rd);if(_rp.templates)DB.templates=_rp.templates;}}catch(e){}
+  // Add default daily supervision template if role can see sched
+  if(role==='teacher_affairs'||role==='admin'||role==='admin_assistant'){
+    var _hasIshraf=DB.templates.some(function(t){return t.id==='__ishraf__';});
+    var _sharedHasIshraf=getSharedTpls().some(function(t){return t.id==='__ishraf__';});
+    if(!_hasIshraf&&!_sharedHasIshraf){
+      DB.templates.push({
+        id:'__ishraf__',
+        name:'إشراف اليوم',
+        body:'*{اليوم} — {التاريخ_هجري}*\n\n{📅 الإشراف}\n\n{اسم_المرسل}',
+        recur:'daily',
+        days:[],
+        cat:'إشراف',
+        shared:false
+      });
+      save();
+    }
+  }
   save();
   renderToday(); renderMTpls(); renderTC(); renderTpls();
   renderPrivBadge(); showAbsNav(); updateChipsForRole();
+  // Start Firebase sync
+  if(typeof fbListen !== 'undefined') fbListen();
 }
 function showRoleScreen(){
   document.getElementById('role-screen').classList.remove('hidden');
@@ -1283,6 +1422,7 @@ function getParents(){
 function saveParents(arr){
   _parentsCache=arr;
   try{localStorage.setItem('sd_parents_v1',JSON.stringify(arr));}catch(e){}
+  if(typeof fbSaveParents!=='undefined')fbSaveParents(arr);
 }
 
 // ── SCHOOL SETTINGS ──
@@ -1304,9 +1444,9 @@ function addToLog(name,msg){
 
 // ── SCHED ──
 function getSched(){if(_schedCache!==null)return _schedCache;try{var d=localStorage.getItem(SCHED_KEY);_schedCache=d?JSON.parse(d):{};}catch(e){_schedCache={};}return _schedCache;}
-function saveSched(data){_schedCache=data;try{localStorage.setItem(SCHED_KEY,JSON.stringify(data));}catch(e){}}
+function saveSched(data){_schedCache=data;try{localStorage.setItem(SCHED_KEY,JSON.stringify(data));}catch(e){}if(typeof fbSaveSched!=='undefined')fbSaveSched(data);}
 function getSchedLocs(){if(_schedLocsCache!==null)return _schedLocsCache;try{var d=localStorage.getItem(SCHED_LOCS_KEY);_schedLocsCache=d?JSON.parse(d):[];}catch(e){_schedLocsCache=[];}return _schedLocsCache;}
-function saveSchedLocs_data(arr){_schedLocsCache=arr;try{localStorage.setItem(SCHED_LOCS_KEY,JSON.stringify(arr));}catch(e){}}
+function saveSchedLocs_data(arr){_schedLocsCache=arr;try{localStorage.setItem(SCHED_LOCS_KEY,JSON.stringify(arr));}catch(e){}if(typeof fbSaveSchedLocs!=='undefined')fbSaveSchedLocs(arr);}
 
 // ── SHARED TEMPLATES ──
 function getSharedTpls(){try{var d=localStorage.getItem(SHARED_TPLS_KEY);return d?JSON.parse(d):[];}catch(e){return[];}}
@@ -2027,6 +2167,8 @@ function genMsg(body){
   msg=msg.replace(/\{الطابور\}/g,resolveMultiTag?resolveMultiTag(day,'_taboor'):'');
   msg=msg.replace(/\{الصلاة_مشرف\}/g,resolveMultiTag?resolveMultiTag(day,'_salah'):'');
   msg=msg.replace(/\{المناوبة_مشرف\}/g,resolveMultiTag?resolveMultiTag(day,'_monawaba'):'');
+  // Resolve {📅 الإشراف} tag
+  msg=msg.replace(/\{📅 الإشراف\}/g,function(){return buildFullIshraf?buildFullIshraf():'';});
   return msg;
 }
 function sendWA(){
@@ -2358,10 +2500,10 @@ try{
   if(storedVer !== APP_VERSION){
     // New version - wipe all contact/template data for fresh start
     var keysToRemove = [
-      'sd_admin_v1','sd_ta_v1','sd_sa_v1','sd_aa_v1',
-      SHARED_TEACHERS_KEY, 'sd_parents_v1', SHARED_TPLS_KEY,
       'sd_msg_log_v1'
-    ];
+    ]; // Keep templates, teachers, parents — only clear log
+
+
     keysToRemove.forEach(function(k){ try{localStorage.removeItem(k);}catch(e){} });
     localStorage.setItem('sd_app_version', APP_VERSION);
     _parentsCache = null;
